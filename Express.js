@@ -4,7 +4,7 @@ import { connectToDB, closeConnection } from './mongo_iterate.js';
 import {ObjectId} from "mongodb";
 
 const app = express();
-const PORT = 3006;
+const PORT = process.env.PORT || 3006;
 
 // Middleware
 app.use(cors());
