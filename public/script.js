@@ -1,5 +1,21 @@
+let allMovies = [];
+let filteredMovies = [];
+
 function createModalsFields(movies) {
     const container = document.getElementById('movies-container');
+
+    container.innerHTML = '';
+
+    if (movies.length === 0) {
+        container.innerHTML = `
+            <div class="no-movies">
+                <i class="fas fa-film"></i>
+                <h3>Nenhum filme encontrado</h3>
+                <p>Tente ajustar os filtros para ver mais resultados</p>
+            </div>
+        `;
+        return;
+    }
 
     movies.forEach((movie, index) => {
         const card = document.createElement('div');
@@ -8,11 +24,115 @@ function createModalsFields(movies) {
         card.style.backgroundImage = `url(${movie.poster})`;
         card.addEventListener('click', () => openModal(movie));
 
-
+        const cardInfo = document.createElement('div');
+        cardInfo.classList.add('movie-card-info');
+        cardInfo.innerHTML = `
+            <div class="movie-card-title">${movie.title || 'N/A'}</div>
+            <div class="movie-card-genres">${movie.genres?.join(', ') || 'N/A'}</div>
+            <div class="movie-card-rating">
+                <i class="fas fa-star"></i>
+                ${movie.imdb?.rating || 'N/A'}
+            </div>
+        `;
+        card.appendChild(cardInfo);
         container.appendChild(card);
+    });
+
+    updateMoviesStats(movies.length);
+}
+
+function updateMoviesStats(count) {
+    const statsElement = document.getElementById('movies-stats');
+    const totalMovies = allMovies.length;
+
+    if (count === totalMovies) {
+        statsElement.textContent = `Exibindo todos os ${totalMovies} filmes`;
+    } else {
+        statsElement.textContent = `Exibindo ${count} de ${totalMovies} filmes`;
+    }
+}
+
+function populateFilters(movies) {
+    const genres = new Set();
+    const years = new Set();
+
+    movies.forEach(movie => {
+        if (movie.genres) {
+            movie.genres.forEach(genre => genres.add(genre));
+        }
+        if (movie.year) {
+            years.add(movie.year);
+        }
+    });
+
+    const genreFilter = document.getElementById('genre-filter');
+    const sortedGenres = Array.from(genres).sort();
+    genreFilter.innerHTML = '<option value="">Todos os Gêneros</option>';
+    sortedGenres.forEach(genre => {
+        const option = document.createElement('option');
+        option.value = genre;
+        option.textContent = genre;
+        genreFilter.appendChild(option);
+    });
+
+    const yearFilter = document.getElementById('year-filter');
+    const sortedYears = Array.from(years).sort((a, b) => b - a); // Descending order
+    yearFilter.innerHTML = '<option value="">Todos os Anos</option>';
+    sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearFilter.appendChild(option);
     });
 }
 
+function applyFilters() {
+    const genreFilter = document.getElementById('genre-filter').value;
+    const yearFilter = document.getElementById('year-filter').value;
+    const ratingFilter = document.getElementById('rating-filter').value;
+
+    filteredMovies = allMovies.filter(movie => {
+        if (genreFilter && (!movie.genres || !movie.genres.includes(genreFilter))) {
+            return false;
+        }
+
+        if (yearFilter && movie.year != yearFilter) {
+            return false;
+        }
+
+        if (ratingFilter) {
+            const movieRating = movie.imdb?.rating;
+            if (!movieRating || movieRating < parseFloat(ratingFilter)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    createModalsFields(filteredMovies);
+}
+
+function clearFilters() {
+    document.getElementById('genre-filter').value = '';
+    document.getElementById('year-filter').value = '';
+    document.getElementById('rating-filter').value = '';
+
+    filteredMovies = [...allMovies];
+    createModalsFields(filteredMovies);
+}
+
+function setupFilterListeners() {
+    const genreFilter = document.getElementById('genre-filter');
+    const yearFilter = document.getElementById('year-filter');
+    const ratingFilter = document.getElementById('rating-filter');
+    const clearButton = document.getElementById('clear-filters');
+
+    genreFilter.addEventListener('change', applyFilters);
+    yearFilter.addEventListener('change', applyFilters);
+    ratingFilter.addEventListener('change', applyFilters);
+    clearButton.addEventListener('click', clearFilters);
+}
 
 function openModal(movie) {
     const modal = document.getElementById('movie-modal');
@@ -30,19 +150,18 @@ function openModal(movie) {
     const modalTomatoes = document.getElementById('modal-Tomatoes');
     const modalComments = document.getElementById('modal-Comments');
 
-    // Set movie data
-    modalTitle.textContent = `Title: ${movie.title || 'N/A'}`;
-    modalPlot.textContent = `Plot: ${movie.fullplot || movie.plot || 'N/A'}`;
-    modalGenres.textContent = `Genres: ${movie.genres?.join(', ') || 'N/A'}`;
-    modalRuntime.textContent = `Runtime: ${movie.runtime ? movie.runtime + ' min' : 'N/A'}`;
-    modalCast.textContent = `Cast: ${movie.cast?.join(', ') || 'N/A'}`;
-    modalLanguage.textContent = `Language: ${movie.languages?.join(', ') || 'N/A'}`;
-    modalReleased.textContent = `Released: ${movie.released ? new Date(movie.released).toDateString() : 'N/A'}`;
-    modalDirectors.textContent = `Directors: ${movie.directors?.join(', ') || 'N/A'}`;
-    modalWriters.textContent = `Writers: ${movie.writers?.join(', ') || 'N/A'}`;
-    modalYear.textContent = `Year: ${movie.year || 'N/A'}`;
-    modalIMDB.textContent = `IMDB: ${movie.imdb?.rating || 'N/A'} (${movie.imdb?.votes || 0} votes)`;
-    modalTomatoes.textContent = `Tomatoes: ${movie.tomatoes?.viewer?.rating || 'N/A'} (${movie.tomatoes?.viewer?.numReviews || 0} reviews)`;
+    modalTitle.textContent = movie.title || 'N/A';
+    modalPlot.textContent = movie.fullplot || movie.plot || 'N/A';
+    modalGenres.textContent = movie.genres?.join(', ') || 'N/A';
+    modalRuntime.textContent = movie.runtime ? movie.runtime + ' min' : 'N/A';
+    modalCast.textContent = movie.cast?.join(', ') || 'N/A';
+    modalLanguage.textContent = movie.languages?.join(', ') || 'N/A';
+    modalReleased.textContent = movie.released ? new Date(movie.released).toDateString() : 'N/A';
+    modalDirectors.textContent = movie.directors?.join(', ') || 'N/A';
+    modalWriters.textContent = movie.writers?.join(', ') || 'N/A';
+    modalYear.textContent = movie.year || 'N/A';
+    modalIMDB.textContent = movie.imdb?.rating ? `${movie.imdb.rating} (${movie.imdb.votes || 0} votes)` : 'N/A';
+    modalTomatoes.textContent = movie.tomatoes?.viewer?.rating ? `${movie.tomatoes.viewer.rating} (${movie.tomatoes.viewer.numReviews || 0} reviews)` : 'N/A';
 
     modalComments.innerHTML = `
         <h2>Comments</h2>
@@ -57,43 +176,51 @@ function openModal(movie) {
 
     GetComments(movie._id).then(comments => {
         if (!comments.length) {
-            commentsList.innerHTML = `<p>No comments yet.</p>`;
+            commentsList.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No comments yet. Be the first to comment!</p>`;
             return;
         }
 
         comments.forEach(comment => {
             const commentEl = document.createElement('div');
             commentEl.classList.add('comment-box');
+            const initials = comment.name.split(' ').map(n => n[0]).join('').toUpperCase();
             commentEl.innerHTML = `
-                <div class="comment-avatar"></div>
+                <div class="comment-avatar">${initials}</div>
                 <div class="comment-content">
-                    <span class="comment-name">${comment.name}</span>
-                    <span class="comment-text" data-id="${comment._id.$oid}">${comment.text}</span>
-                    <button class="edit-comment" data-id="${comment._id}">Edit</button>
-                    <button class="delete-comment" data-id="${comment._id}">Delete</button>
+                    <div class="comment-name">${comment.name}</div>
+                    <div class="comment-text" data-id="${comment._id}">${comment.text}</div>
+                    <div>
+                        <button class="edit-comment" data-id="${comment._id}">Edit</button>
+                        <button class="delete-comment" data-id="${comment._id}">Delete</button>
+                    </div>
                 </div>
             `;
             commentsList.appendChild(commentEl);
         });
 
-        // Edit functionality
         document.querySelectorAll('.edit-comment').forEach(button => {
             button.addEventListener('click', async () => {
                 const commentId = button.dataset.id;
-                const newText = prompt('Edit your comment:');
-                if (!newText) return;
-                console.log('Updating comment with ID:', commentId);
+                const currentText = button.closest('.comment-content').querySelector('.comment-text').textContent;
+                const newText = prompt('Edit your comment:', currentText);
+                if (!newText || newText === currentText) return;
 
-                const response = await fetch(`http://localhost:3006/Comments/update/${commentId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({text: newText })
-                });
+                try {
+                    const response = await fetch(`http://localhost:3006/Comments/update/${commentId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: newText })
+                    });
 
-                if (response.ok) {
-                    openModal(movie);
-                } else {
-                    alert('Failed to update comment.');
+                    if (response.ok) {
+                        openModal(movie);
+                    } else {
+                        const error = await response.json();
+                        alert('Failed to update comment: ' + (error.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error updating comment:', error);
+                    alert('Network error occurred');
                 }
             });
         });
@@ -104,14 +231,20 @@ function openModal(movie) {
 
                 if (!confirm('Are you sure you want to delete this comment?')) return;
 
-                const response = await fetch(`http://localhost:3006/Comments/delete/${commentId}`, {
-                    method: 'DELETE'
-                });
+                try {
+                    const response = await fetch(`http://localhost:3006/Comments/delete/${commentId}`, {
+                        method: 'DELETE'
+                    });
 
-                if (response.ok) {
-                    openModal(movie);
-                } else {
-                    alert('Failed to delete comment.');
+                    if (response.ok) {
+                        openModal(movie);
+                    } else {
+                        const error = await response.json();
+                        alert('Failed to delete comment: ' + (error.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error deleting comment:', error);
+                    alert('Network error occurred');
                 }
             });
         });
@@ -120,10 +253,13 @@ function openModal(movie) {
     document.getElementById('submit-comment').addEventListener('click', async () => {
         const input = document.getElementById('new-comment-input');
         const text = input.value.trim();
-        if (!text) return;
+        if (!text) {
+            alert('Please enter a comment');
+            return;
+        }
 
         const newComment = {
-            name: "Anonymous",
+            name: "Anonymous User",
             email: "anonymous@example.com",
             movie_id: movie._id,
             text
@@ -140,30 +276,58 @@ function openModal(movie) {
                 input.value = '';
                 openModal(movie);
             } else {
-                const data = await response.json();
-                alert('Failed to add comment: ' + data.error);
+                const error = await response.json();
+                alert('Failed to add comment: ' + (error.error || 'Unknown error'));
             }
         } catch (error) {
             console.error('Error adding comment:', error);
-            alert('Server error');
+            alert('Network error occurred');
         }
     });
 
-    // Show the modal
+    document.getElementById('new-comment-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('submit-comment').click();
+        }
+    });
+
     modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
-
-
 function GetLivros() {
+    // Show loading state
+    const container = document.getElementById('movies-container');
+    const statsElement = document.getElementById('movies-stats');
+
+    container.innerHTML = '<div class="loading"></div>';
+    statsElement.textContent = 'Carregando filmes...';
+
     fetch('http://localhost:3006/movies')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            createModalsFields(data);
+            allMovies = data;
+            filteredMovies = [...allMovies];
+
+            populateFilters(allMovies);
+            createModalsFields(filteredMovies);
+            setupFilterListeners();
         })
         .catch(error => {
             console.error('Error fetching movies:', error);
-            alert('Error fetching movies. Check console for details.');
+            container.innerHTML = `
+                <div class="no-movies">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Erro ao carregar filmes</h3>
+                    <p>Verifique se o servidor está rodando na porta 3006</p>
+                </div>
+            `;
+            statsElement.textContent = 'Erro ao carregar dados';
         });
 }
 
@@ -177,15 +341,19 @@ function GetComments(id) {
         })
         .catch(error => {
             console.error('Error fetching Comments:', error);
-            alert('Error fetching comments. Check console for details.');
             return [];
         });
 }
 
-
 function closeModal() {
     const modal = document.getElementById('movie-modal');
     modal.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Re-enable background scrolling
 }
 
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+});
 window.onload = GetLivros;

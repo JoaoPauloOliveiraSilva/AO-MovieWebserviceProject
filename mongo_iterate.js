@@ -1,13 +1,19 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { MongoClient } from 'mongodb';
 
-const uri = 'mongodb+srv://Paulis:JPOS2002@cluster0.sau74vj.mongodb.net/?retryWrites=true&w=majority';
-const dbName = 'sample_mflix';
+const uri = process.env.URL;
+const dbName = process.env.DB;
 
 let db = null;
 let client = null;
 
 async function connectToDB() {
   if (db) return db;
+  if (!uri || !dbName) {
+    throw new Error('Missing MongoDB URI or database name in environment variables.');
+  }
   try {
     client = new MongoClient(uri);
     await client.connect();
@@ -23,7 +29,7 @@ async function connectToDB() {
 async function closeConnection() {
   if (client) {
     await client.close();
-    console.log('MongoDB connection closed!!!!');
+    console.log('MongoDB connection closed!');
     client = null;
     db = null;
   }

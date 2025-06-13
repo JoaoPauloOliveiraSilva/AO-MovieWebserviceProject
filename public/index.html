@@ -9,6 +9,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+
+<div class="header">
+    <h1>CineMongo</h1>
+
+    <div class="filter-section">
+        <div class="filter-group">
+            <label for="genre-filter">Filtrar por Gênero:</label>
+            <select id="genre-filter" class="filter-select">
+                <option value="">Todos os Gêneros</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="year-filter">Filtrar por Ano:</label>
+            <select id="year-filter" class="filter-select">
+                <option value="">Todos os Anos</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="rating-filter">Avaliação Mínima (IMDB):</label>
+            <select id="rating-filter" class="filter-select">
+                <option value="">Qualquer Avaliação</option>
+                <option value="9">9.0+</option>
+                <option value="8">8.0+</option>
+                <option value="7">7.0+</option>
+                <option value="6">6.0+</option>
+                <option value="5">5.0+</option>
+            </select>
+        </div>
+
+        <button id="clear-filters" class="clear-filters">
+            <i class="fas fa-times"></i> Limpar Filtros
+        </button>
+    </div>
+
+    <div class="movies-stats" id="movies-stats">
+        Carregando filmes...
+    </div>
+</div>
+
 <div id="movies-container" class="movies-container">
 </div>
 
