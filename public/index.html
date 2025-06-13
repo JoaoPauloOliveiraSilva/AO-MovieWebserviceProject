@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movies</title>
+    <title>CineAI - Discover Movies with AI</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 <div id="movies-container" class="movies-container">
 </div>
 
 <div id="movie-modal" class="modal">
+    <div class="modal-backdrop" onclick="closeModal()"></div>
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
         <h2 id="modal-title"></h2>
@@ -28,11 +31,10 @@
             <h2 id="modal-Tomatoes"></h2>
         </div>
         <div id="modal-Comments">
-
         </div>
     </div>
 </div>
 
-<script src="script.js"></script> <
+<script src="script.js"></script>
 </body>
 </html>
