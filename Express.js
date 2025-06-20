@@ -1,19 +1,31 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { connectToDB, closeConnection } from './mongo_iterate.js';
 import {ObjectId} from "mongodb";
 
 const app = express();
 const PORT = process.env.PORT || 3006;
 
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Middleware
 app.use(cors());
 app.use(express.static('public'));
 app.use(express.json());
 
-// Endpoint
+// Serve static files (HTML, CSS, JS)
+app.use(express.static(__dirname));
 
+// Serve index.html at root
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
+// API Endpoints
 app.get('/movies', async (req, res) => {
     try {
         const db = await connectToDB();
@@ -31,10 +43,11 @@ app.get('/Comments', async (req, res) => {
         const Comments = await db.collection('comments').find().toArray();
         res.json(Comments);
     } catch (error) {
-        console.error('Error fetching movies:', error);
+        console.error('Error fetching comments:', error);
         res.status(500).send('Internal Server Error');
     }
 });
+
 app.get('/Comments/:id', async (req, res) => {
     try {
         const db = await connectToDB();
@@ -43,12 +56,10 @@ app.get('/Comments/:id', async (req, res) => {
             .toArray();
         res.json(Comments);
     } catch (error) {
-        console.error('Error fetching movies:', error);
+        console.error('Error fetching comments:', error);
         res.status(500).send('Internal Server Error');
     }
 });
-
-
 
 app.post('/Comments/add', async (req, res) => {
     try {
@@ -93,23 +104,32 @@ app.put('/Comments/update/:id', async (req, res) => {
             { _id: new ObjectId(id) },
             { $set: {  text, date: new Date() } }
         );
-        res.status(201).json({
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'Comment not found' });
+        }
+
+        res.status(200).json({
             message: 'Comment updated successfully',
-            commentId: result.insertedId
+            modifiedCount: result.modifiedCount
         });
     } catch (error) {
-        console.error('Error adding comment:', error);
-        res.status(500).json({ error: 'Failed to add comment' });
+        console.error('Error updating comment:', error);
+        res.status(500).json({ error: 'Failed to update comment' });
     }
 });
-
 
 app.delete('/Comments/delete/:id', async (req, res) => {
     try {
         const db = await connectToDB();
         const commentid = new ObjectId(req.params.id);
-        const Comments = await db.collection('comments').deleteOne({ _id: commentid })
-        res.json(Comments);
+        const result = await db.collection('comments').deleteOne({ _id: commentid });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Comment not found' });
+        }
+
+        res.json({ message: 'Comment deleted successfully', deletedCount: result.deletedCount });
     } catch (error) {
         console.error('Error deleting comment:', error);
         res.status(500).send('Internal Server Error');
@@ -119,7 +139,6 @@ app.delete('/Comments/delete/:id', async (req, res) => {
 app.listen(PORT, async () => {
     try {
         await connectToDB();
-
         console.log(`Server running at http://localhost:${PORT}`);
     } catch (err) {
         console.error('Failed to connect to MongoDB on startup', err);
@@ -129,6 +148,12 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', async () => {
     console.log('\nShutting down...');
+    await closeConnection();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    console.log('\nReceived SIGTERM, shutting down gracefully...');
     await closeConnection();
     process.exit(0);
 });

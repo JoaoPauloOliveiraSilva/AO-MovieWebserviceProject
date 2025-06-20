@@ -1,6 +1,9 @@
 let allMovies = [];
 let filteredMovies = [];
 
+// Get the base URL dynamically
+const API_BASE_URL = window.location.origin;
+
 function createModalsFields(movies) {
     const container = document.getElementById('movies-container');
 
@@ -206,7 +209,7 @@ function openModal(movie) {
                 if (!newText || newText === currentText) return;
 
                 try {
-                    const response = await fetch(`http://localhost:3006/Comments/update/${commentId}`, {
+                    const response = await fetch(`${API_BASE_URL}/Comments/update/${commentId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ text: newText })
@@ -232,7 +235,7 @@ function openModal(movie) {
                 if (!confirm('Are you sure you want to delete this comment?')) return;
 
                 try {
-                    const response = await fetch(`http://localhost:3006/Comments/delete/${commentId}`, {
+                    const response = await fetch(`${API_BASE_URL}/Comments/delete/${commentId}`, {
                         method: 'DELETE'
                     });
 
@@ -266,7 +269,7 @@ function openModal(movie) {
         };
 
         try {
-            const response = await fetch('http://localhost:3006/Comments/add', {
+            const response = await fetch(`${API_BASE_URL}/Comments/add`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newComment)
@@ -303,7 +306,7 @@ function GetLivros() {
     container.innerHTML = '<div class="loading"></div>';
     statsElement.textContent = 'Carregando filmes...';
 
-    fetch('http://localhost:3006/movies')
+    fetch(`${API_BASE_URL}/movies`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -324,7 +327,7 @@ function GetLivros() {
                 <div class="no-movies">
                     <i class="fas fa-exclamation-triangle"></i>
                     <h3>Erro ao carregar filmes</h3>
-                    <p>Verifique se o servidor está rodando na porta 3006</p>
+                    <p>Verifique se o servidor está funcionando</p>
                 </div>
             `;
             statsElement.textContent = 'Erro ao carregar dados';
@@ -332,7 +335,7 @@ function GetLivros() {
 }
 
 function GetComments(id) {
-    return fetch(`http://localhost:3006/Comments/${id}`)
+    return fetch(`${API_BASE_URL}/Comments/${id}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -356,4 +359,5 @@ document.addEventListener('keydown', (e) => {
         closeModal();
     }
 });
+
 window.onload = GetLivros;
