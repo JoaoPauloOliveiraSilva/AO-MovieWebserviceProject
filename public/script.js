@@ -1,7 +1,6 @@
 let allMovies = [];
 let filteredMovies = [];
 
-// Get the base URL dynamically
 const API_BASE_URL = window.location.origin;
 
 function createModalsFields(movies) {
