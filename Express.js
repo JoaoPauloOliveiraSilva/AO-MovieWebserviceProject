@@ -8,7 +8,6 @@ import {ObjectId} from "mongodb";
 const app = express();
 const PORT = process.env.PORT || 3006;
 
-// Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -17,15 +16,13 @@ app.use(cors());
 app.use(express.static('public'));
 app.use(express.json());
 
-// Serve static files (HTML, CSS, JS)
 app.use(express.static(__dirname));
 
-// Serve index.html at root
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// API Endpoints
+// Endpoints
 app.get('/movies', async (req, res) => {
     try {
         const db = await connectToDB();
